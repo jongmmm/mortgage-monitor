@@ -1,0 +1,12 @@
+[project]
+name = "mortgage-monitor"
+version = "0.1.0"
+description = "Automated FRED Treasury vs mortgage rates monitor"
+authors = [{name = "Jong-Myun Moon"}]
+requires-python = ">=3.13"
+
+dependencies = [
+    "fredapi",
+    "pandas",
+    "plotly"
+]
