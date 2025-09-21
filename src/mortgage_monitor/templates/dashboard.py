@@ -4,7 +4,7 @@ import datetime
 from typing import Dict
 from zoneinfo import ZoneInfo
 
-from ..config.settings import settings
+from ..charts.registry import ChartRegistry
 
 
 class DashboardTemplate:
@@ -104,13 +104,13 @@ class DashboardTemplate:
         }
         .chart-frame {
             width: 100%;
-            height: 470px;
+            height: 570px;
             border: none;
             border-radius: 5px;
             display: block;
         }
         .explanation {
-            margin-top: 10px;
+            margin-top: 5px;
             padding: 15px;
             background-color: #f8f9fa;
             border-left: 4px solid #3498db;
@@ -153,16 +153,46 @@ class DashboardTemplate:
         """
     
     def _get_charts_section(self) -> str:
-        """Get charts section HTML."""
-        return f"""
-    <div class="chart-container">
-        <iframe src="{settings.CHART_FILES['lock_in']}" class="chart-frame"></iframe>
-        <div class="explanation">
+        """Get charts section HTML dynamically from registry."""
+        sections = []
+        
+        for chart_meta in ChartRegistry.get_all_charts():
+            sections.append(self._render_chart_section(chart_meta))
+        
+        return "\n".join(sections)
+    
+    def _render_chart_section(self, chart_meta) -> str:
+        """Render a single chart section.
+        
+        Args:
+            chart_meta: Chart metadata from registry.
+            
+        Returns:
+            HTML string for the chart section.
+        """
+        # Generate explanation points if available
+        explanation_html = ""
+        if chart_meta.explanation:
+            explanation_html = f"<p>{chart_meta.explanation}</p>"
+        
+        # Generate data sources list
+        data_sources_html = ""
+        if chart_meta.data_sources:
+            source_items = []
+            for source in chart_meta.data_sources:
+                source_items.append(f'<li><a href="{source.url}" target="_blank">{source.name}</a></li>')
+            data_sources_html = f"""
             <h4>Data Sources</h4>
             <ul>
-                <li><a href="https://fred.stlouisfed.org/series/MORTGAGE30US" target="_blank">FRED: MORTGAGE30US</a></li>
-                <li><a href="https://www.fhfa.gov/document/nmdb-outstanding-mortgage-statistics-national-census-areas-quarterly.zip" target="_blank">FHFA NMDB: Outstanding Mortgage Statistics (ZIP)</a></li>
-            </ul>
+                {"".join(source_items)}
+            </ul>"""
+        
+        return f"""
+    <div class="chart-container">
+        <iframe src="{chart_meta.name}_chart.html" class="chart-frame"></iframe>
+        <div class="explanation">
+            <h4>{chart_meta.title}</h4>
+            {explanation_html}
+            {data_sources_html}
         </div>
-    </div>
-        """
+    </div>"""

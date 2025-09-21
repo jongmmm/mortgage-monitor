@@ -10,6 +10,7 @@ import requests
 from fredapi import Fred
 
 from ..config.settings import settings
+from ..charts.registry import ChartRegistry
 
 
 class DataFetcher:
@@ -39,7 +40,7 @@ class DataFetcher:
         return series
     
     def fetch_all_fred_data(self) -> Dict[str, pd.Series]:
-        """Fetch required FRED data series.
+        """Fetch required FRED data series based on chart registry.
         
         Returns:
             Dictionary mapping series names to pandas Series.
@@ -47,13 +48,23 @@ class DataFetcher:
         print("Fetching FRED data...")
         data_dict = {}
         
-        # Only fetch Mortgage30 for this simple overlay
-        try:
-            data_dict["Mortgage30"] = self.fetch_fred_series("MORTGAGE30US")
-            print(f"✓ Fetched Mortgage30 - {len(data_dict['Mortgage30'])} observations")
-        except Exception as e:
-            print(f"✗ Failed to fetch Mortgage30: {e}")
-            data_dict["Mortgage30"] = pd.Series(dtype=float, name="Mortgage30")
+        # Get required data dependencies from registry
+        required_series = ChartRegistry.get_required_data_dependencies()
+        
+        # Filter to only FRED series (exclude special ones like NMDB_QuarterlyRate)
+        fred_series_needed = {name: series_id for name, series_id in settings.FRED_SERIES.items() 
+                             if name in required_series}
+        
+        print(f"Required FRED series: {list(fred_series_needed.keys())}")
+        
+        # Fetch all required FRED series
+        for series_name, series_id in fred_series_needed.items():
+            try:
+                data_dict[series_name] = self.fetch_fred_series(series_id)
+                print(f"✓ Fetched {series_name} - {len(data_dict[series_name])} observations")
+            except Exception as e:
+                print(f"✗ Failed to fetch {series_name}: {e}")
+                data_dict[series_name] = pd.Series(dtype=float, name=series_name)
         
         return data_dict
     
@@ -131,5 +142,40 @@ class DataFetcher:
         df = pd.concat(data_dict.values(), axis=1, keys=data_dict.keys())
         df = df.dropna(how='all')
         
+        # Save individual chart data files
+        self._save_chart_data_files(data_dict, nmdb_data)
         
         return df
+    
+    def _save_chart_data_files(self, data_dict: Dict[str, pd.Series], nmdb_data: pd.Series) -> None:
+        """Save individual data files for each chart based on registry.
+        
+        Args:
+            data_dict: Dictionary of FRED data series
+            nmdb_data: FHFA NMDB average interest rate series
+        """
+        print("Saving individual chart data files...")
+        
+        # Add NMDB data to the available data
+        all_data = data_dict.copy()
+        if not nmdb_data.empty:
+            all_data["NMDB_QuarterlyRate"] = nmdb_data
+        
+        # Save data file for each registered chart
+        for chart_meta in ChartRegistry.get_all_charts():
+            chart_data = {}
+            
+            # Collect required data for this chart
+            for dependency in chart_meta.data_dependencies:
+                if dependency in all_data:
+                    chart_data[dependency] = all_data[dependency]
+            
+            # Save chart data file if we have any data
+            if chart_data:
+                df = pd.concat(chart_data.values(), axis=1, keys=chart_data.keys())
+                df = df.dropna(how='all')
+                file_path = f"{settings.DATA_DIR}/{chart_meta.name}_data.csv"
+                df.to_csv(file_path)
+                print(f"✓ Saved {chart_meta.name} chart data: {file_path}")
+            else:
+                print(f"⚠ No data available for {chart_meta.name} chart dependencies: {chart_meta.data_dependencies}")

@@ -8,6 +8,7 @@ from .config.settings import settings
 from .data.fetchers import DataFetcher
 from .charts.factory import ChartFactory
 from .templates.dashboard import DashboardTemplate
+from . import charts  # noqa: F401 - Import to ensure chart registration
 
 
 class MortgageMonitorApp:
@@ -42,15 +43,6 @@ class MortgageMonitorApp:
         
         return self.df
     
-    def save_data(self, df: pd.DataFrame) -> None:
-        """Save data to CSV file.
-        
-        Args:
-            df: DataFrame to save.
-        """
-        output_path = f"{settings.DATA_DIR}/{settings.DATA_FILE}"
-        df.to_csv(output_path)
-        print(f"Data saved to {output_path}")
     
     def create_charts(self, df: pd.DataFrame) -> Dict:
         """Create all dashboard charts.
@@ -103,16 +95,13 @@ class MortgageMonitorApp:
             # Step 1: Fetch data
             df = self.fetch_data()
             
-            # Step 2: Save data
-            self.save_data(df)
-            
-            # Step 3: Create charts
+            # Step 2: Create charts
             chart_results = self.create_charts(df)
             
-            # Step 4: Create dashboard
+            # Step 3: Create dashboard
             self.create_dashboard(chart_results['metrics'])
             
-            # Step 5: Print summary
+            # Step 4: Print summary
             self._print_summary()
             
         except Exception as e:
@@ -121,9 +110,12 @@ class MortgageMonitorApp:
     
     def _print_summary(self) -> None:
         """Print application summary."""
-        print("📊 Data saved: mortgage_dashboard_data.csv")
+        print("📊 Individual chart data files saved:")
+        print("   - lock_in_data.csv")
+        print("   - mortgage_treasury_data.csv")
         print("🚀 Dashboard includes:")
         print("   - NMDB quarterly average mortgage interest rate overlaid with current 30Y mortgage rate")
+        print("   - 30Y mortgage vs 10Y Treasury rate comparison with spread visualization")
 
 
 def main() -> None:

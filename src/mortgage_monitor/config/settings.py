@@ -26,6 +26,7 @@ class Settings:
     # FRED Series Configuration (simplified)
     FRED_SERIES: Dict[str, str] = {
         "Mortgage30": "MORTGAGE30US",
+        "Treasury10Y": "DGS10",
     }
     
     # Output paths
@@ -34,13 +35,11 @@ class Settings:
     TEMPLATES_DIR = "src/mortgage_monitor/templates"
     
     # File names
-    DATA_FILE = "mortgage_dashboard_data.csv"
+    DATA_FILE = "mortgage_dashboard_data.csv"  # Legacy combined file
     DASHBOARD_FILE = "index.html"
     
-    # Chart file names
-    CHART_FILES = {
-        "lock_in": "lock_in_chart.html",
-    }
+    # Note: Individual chart data files and chart HTML files are now 
+    # dynamically generated based on chart registry. No hard-coding needed.
     
     @classmethod
     def validate(cls) -> None:
