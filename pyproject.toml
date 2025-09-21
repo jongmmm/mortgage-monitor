@@ -1,12 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "mortgage-monitor"
-version = "0.1.0"
-description = "Automated FRED Treasury vs mortgage rates monitor"
+version = "0.2.0"
+description = "Comprehensive housing market analysis dashboard with mortgage rate monitoring"
 authors = [{name = "Jong-Myun Moon"}]
 requires-python = ">=3.13"
+readme = "README.md"
+license = {file = "LICENSE"}
 
 dependencies = [
+    "python-dotenv>=1.0.0",
     "fredapi",
     "pandas",
-    "plotly"
+    "plotly",
+    "requests",
 ]
+
+[dependency-groups]
+dev = [
+    "python-dotenv>=1.1.1",
+    "ruff>=0.13.0",
+]
+
+[project.scripts]
+mortgage-monitor = "mortgage_monitor.app:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mortgage_monitor"]

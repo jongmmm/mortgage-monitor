@@ -3,6 +3,18 @@ index.html
 spread_vs_mortgage.csv
 *.png
 
+# Generated dashboards and data (new locations)
+/output/
+/data/
+
+# Legacy root-level generated HTML artifacts (kept here for clarity)
+# These are now written to /output/ and can be safely ignored if re-created locally
+lock_in_chart.html
+treasury_chart.html
+fed_chart.html
+affordability_chart.html
+activity_chart.html
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
