@@ -18,6 +18,7 @@ dependencies = [
     "plotly",
     "requests",
     "kaleido>=1.1.0",
+    "SQLAlchemy>=2.0.0",
 ]
 
 [dependency-groups]
@@ -28,6 +29,7 @@ dev = [
 
 [project.scripts]
 mortgage-monitor = "mortgage_monitor.app:main"
+macro-dashboard = "macro_dashboard.app:main"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/mortgage_monitor"]
+packages = ["src/mortgage_monitor", "src/macro_dashboard"]
